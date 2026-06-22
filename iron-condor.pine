@@ -1,0 +1,40 @@
+//@version=5
+indicator("Iron Condor Signal (Range Detector)", overlay=true)
+// Inputs
+lengthBB = input.int(20, "BB Length")
+mult = input.float(2.0, "BB Multiplier")
+adxLen = input.int(14, "ADX Length")
+adxThreshold = input.float(20.0, "ADX Threshold (Low Trend)")
+rsiLen = input.int(14, "RSI Length")
+rsiLow = input.int(40, "RSI Lower")
+rsiHigh = input.int(60, "RSI Upper")
+// Bollinger Bands
+basis = ta.sma(close, lengthBB)
+dev = mult * ta.stdev(close, lengthBB)
+upper = basis + dev
+lower = basis - dev
+// ADX (trend strength)
+upMove = high - high[1]
+downMove = low[1] - low
+plusDM = (upMove > downMove and upMove > 0) ? upMove : 0
+minusDM = (downMove > upMove and downMove > 0) ? downMove : 0
+trur = ta.rma(ta.tr(true), adxLen)
+plusDI = 100 * ta.rma(plusDM, adxLen) / trur
+minusDI = 100 * ta.rma(minusDM, adxLen) / trur
+dx = 100 * math.abs(plusDI - minusDI) / (plusDI + minusDI)
+adx = ta.rma(dx, adxLen)
+// RSI (momentum neutrality)
+rsi = ta.rsi(close, rsiLen)
+// Conditions
+lowTrend = adx < adxThreshold
+insideBands = close < upper and close > lower
+neutralMomentum = rsi > rsiLow and rsi < rsiHigh
+condorSignal = lowTrend and insideBands and neutralMomentum
+// Plot
+plot(upper, color=color.red)
+plot(lower, color=color.green)
+plot(basis, color=color.blue)
+bgcolor(condorSignal ? color.new(color.yellow, 80) : na)
+plotshape(condorSignal, title="Condor Signal", location=location.abovebar, color=color.orange, style=shape.labeldown, text="IC")
+// Alerts
+alertcondition(condorSignal, title="Iron Condor Signal", message="Range market detected. Consider Iron Condor.")
