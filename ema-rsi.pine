@@ -1,0 +1,11 @@
+//@version=5
+strategy("Simple Options Bias Strategy", overlay=true)
+ema = ta.ema(close, 20)
+rsi = ta.rsi(close, 14)
+longCondition = close > ema and rsi < 70
+shortCondition = close < ema and rsi > 30
+if (longCondition)
+strategy.entry("Buy", strategy.long)
+if (shortCondition)
+strategy.entry("Sell", strategy.short)
+plot(ema, color=color.blue)
